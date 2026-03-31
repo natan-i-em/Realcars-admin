@@ -115,8 +115,9 @@ export default function AdminDashboard() {
   }, [cars, search, statusFilter, sortBy]);
 
   if (isLoading) return (
-    <div className="h-screen w-full flex items-center justify-center bg-[#080808]">
-      <div className="w-10 h-10 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+    <div className="h-screen w-full flex flex-col items-center justify-center bg-[#080808]">
+      <div className="w-10 h-10 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin mb-4" />
+      <p className="text-[#D4AF37] font-bold tracking-[0.3em] uppercase text-[10px]">RealCars Eth</p>
     </div>
   );
 
@@ -193,92 +194,107 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* DATA LIST */}
+        {/* DATA LIST / EMPTY STATE */}
         <div className="bg-[#0f0f0f] border border-white/5 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl">
-          <div className="hidden md:block">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-white/[0.03] border-b border-white/5 text-[10px] uppercase font-bold text-gray-500 tracking-[0.2em]">
-                <tr>
-                  <th className="px-8 py-6">Owner & Vehicle</th>
-                  <th className="px-8 py-6">Plate Number</th>
-                  <th className="px-8 py-6">Current Status</th>
-                  <th className="px-8 py-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {processedCars.map((car) => (
-                  <tr key={car._id} className="hover:bg-white/[0.01] transition-colors group">
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-black rounded-xl overflow-hidden relative border border-white/10">
-                          {car.carPhotos?.[0] ? <Image src={car.carPhotos[0]} alt="" fill className="object-cover" /> : <CarIcon size={16} className="m-auto absolute inset-0 text-gray-800" />}
-                        </div>
-                        <div>
-                          <div className="text-white font-bold text-sm tracking-tight">{car.fullName}</div>
-                          <div className="text-[10px] text-gray-500 uppercase">{car.carModel} • {car.carYear}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-5">
-                      <span className="font-mono text-xs text-[#D4AF37] border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-3 py-1 rounded-md tracking-widest uppercase">
-                        {car.plateNumber}
-                      </span>
-                    </td>
-                    <td className="px-8 py-5">
-                      <button 
-                        onClick={() => toggleStatus(car._id, car.status)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
-                          car.status === 'active' 
-                          ? 'bg-green-500/10 border-green-500/30 text-green-500 shadow-[0_0_15px_rgba(34,197,94,0.1)]' 
-                          : 'bg-white/5 border-white/10 text-gray-500 hover:border-gray-400'
-                        }`}
-                      >
-                        {car.status === 'active' ? <CheckCircle2 size={12} /> : <Circle size={12} />}
-                        <span className="text-[10px] font-black uppercase tracking-tighter">
-                          {car.status === 'active' ? 'On Duty' : 'Available'}
-                        </span>
-                      </button>
-                    </td>
-                    <td className="px-8 py-5 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => { setSelectedCar(car); setActiveImage(0); }} className="p-3 bg-white/5 hover:bg-[#D4AF37] hover:text-black rounded-xl transition-all text-gray-400">
-                          <Eye size={18} />
-                        </button>
-                        <button onClick={() => handleDelete(car._id)} className="p-3 hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all text-gray-600">
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* MOBILE LIST */}
-          <div className="md:hidden divide-y divide-white/5">
-            {processedCars.map((car) => (
-              <div key={car._id} className="p-5 flex flex-col gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-black rounded-xl overflow-hidden relative border border-white/10 flex-shrink-0">
-                    {car.carPhotos?.[0] ? <Image src={car.carPhotos[0]} alt="" fill className="object-cover" /> : <CarIcon size={20} className="m-auto absolute inset-0 text-gray-800" />}
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <div className="text-white font-bold text-sm truncate">{car.fullName}</div>
-                    <div className="text-[10px] text-gray-500 uppercase truncate">{car.carModel} • {car.carYear}</div>
-                    <div className="mt-1 font-mono text-[9px] text-[#D4AF37] uppercase tracking-widest">{car.plateNumber}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => toggleStatus(car._id, car.status)} className={`flex-grow flex items-center justify-center gap-2 py-3 rounded-xl border text-[10px] font-black uppercase transition-all ${car.status === 'active' ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-white/5 border-white/10 text-gray-500'}`}>
-                    {car.status === 'active' ? <CheckCircle2 size={12} /> : <Circle size={12} />} {car.status === 'active' ? 'On Duty' : 'Available'}
-                  </button>
-                  <button onClick={() => { setSelectedCar(car); setActiveImage(0); }} className="p-3 bg-white/5 rounded-xl border border-white/10 text-gray-400"><Eye size={20}/></button>
-                  <button onClick={() => handleDelete(car._id)} className="p-3 bg-red-500/5 rounded-xl border border-red-500/10 text-red-900"><Trash2 size={20}/></button>
-                </div>
+          {processedCars.length === 0 ? (
+            <div className="py-20 flex flex-col items-center justify-center text-center px-4">
+              <div className="w-16 h-16 bg-white/[0.02] border border-white/5 rounded-full flex items-center justify-center mb-6">
+                <CarIcon size={32} className="text-gray-700" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-white font-bold text-lg mb-2 uppercase tracking-tight">No Registered Cars Yet</h3>
+              <p className="text-gray-500 text-sm max-w-xs mx-auto">
+                The database is currently empty or no vehicles match your current search criteria.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* DESKTOP VIEW */}
+              <div className="hidden md:block">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-white/[0.03] border-b border-white/5 text-[10px] uppercase font-bold text-gray-500 tracking-[0.2em]">
+                    <tr>
+                      <th className="px-8 py-6">Owner & Vehicle</th>
+                      <th className="px-8 py-6">Plate Number</th>
+                      <th className="px-8 py-6">Current Status</th>
+                      <th className="px-8 py-6 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {processedCars.map((car) => (
+                      <tr key={car._id} className="hover:bg-white/[0.01] transition-colors group">
+                        <td className="px-8 py-5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-black rounded-xl overflow-hidden relative border border-white/10">
+                              {car.carPhotos?.[0] ? <Image src={car.carPhotos[0]} alt="" fill className="object-cover" /> : <CarIcon size={16} className="m-auto absolute inset-0 text-gray-800" />}
+                            </div>
+                            <div>
+                              <div className="text-white font-bold text-sm tracking-tight">{car.fullName}</div>
+                              <div className="text-[10px] text-gray-500 uppercase">{car.carModel} • {car.carYear}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-8 py-5">
+                          <span className="font-mono text-xs text-[#D4AF37] border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-3 py-1 rounded-md tracking-widest uppercase">
+                            {car.plateNumber}
+                          </span>
+                        </td>
+                        <td className="px-8 py-5">
+                          <button 
+                            onClick={() => toggleStatus(car._id, car.status)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+                              car.status === 'active' 
+                              ? 'bg-green-500/10 border-green-500/30 text-green-500 shadow-[0_0_15px_rgba(34,197,94,0.1)]' 
+                              : 'bg-white/5 border-white/10 text-gray-500 hover:border-gray-400'
+                            }`}
+                          >
+                            {car.status === 'active' ? <CheckCircle2 size={12} /> : <Circle size={12} />}
+                            <span className="text-[10px] font-black uppercase tracking-tighter">
+                              {car.status === 'active' ? 'On Duty' : 'Available'}
+                            </span>
+                          </button>
+                        </td>
+                        <td className="px-8 py-5 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button onClick={() => { setSelectedCar(car); setActiveImage(0); }} className="p-3 bg-white/5 hover:bg-[#D4AF37] hover:text-black rounded-xl transition-all text-gray-400">
+                              <Eye size={18} />
+                            </button>
+                            <button onClick={() => handleDelete(car._id)} className="p-3 hover:bg-red-500/10 hover:text-red-500 rounded-xl transition-all text-gray-600">
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE LIST */}
+              <div className="md:hidden divide-y divide-white/5">
+                {processedCars.map((car) => (
+                  <div key={car._id} className="p-5 flex flex-col gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-black rounded-xl overflow-hidden relative border border-white/10 flex-shrink-0">
+                        {car.carPhotos?.[0] ? <Image src={car.carPhotos[0]} alt="" fill className="object-cover" /> : <CarIcon size={20} className="m-auto absolute inset-0 text-gray-800" />}
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <div className="text-white font-bold text-sm truncate">{car.fullName}</div>
+                        <div className="text-[10px] text-gray-500 uppercase truncate">{car.carModel} • {car.carYear}</div>
+                        <div className="mt-1 font-mono text-[9px] text-[#D4AF37] uppercase tracking-widest">{car.plateNumber}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => toggleStatus(car._id, car.status)} className={`flex-grow flex items-center justify-center gap-2 py-3 rounded-xl border text-[10px] font-black uppercase transition-all ${car.status === 'active' ? 'bg-green-500/10 border-green-500/30 text-green-500' : 'bg-white/5 border-white/10 text-gray-500'}`}>
+                        {car.status === 'active' ? <CheckCircle2 size={12} /> : <Circle size={12} />} {car.status === 'active' ? 'On Duty' : 'Available'}
+                      </button>
+                      <button onClick={() => { setSelectedCar(car); setActiveImage(0); }} className="p-3 bg-white/5 rounded-xl border border-white/10 text-gray-400"><Eye size={20}/></button>
+                      <button onClick={() => handleDelete(car._id)} className="p-3 bg-red-500/5 rounded-xl border border-red-500/10 text-red-900"><Trash2 size={20}/></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </main>
 
