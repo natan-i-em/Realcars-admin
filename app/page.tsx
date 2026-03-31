@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
+import useSWR, { mutate } from "swr";
 import * as XLSX from "xlsx";
 import { 
   Search, Download, Eye, Trash2, X, Car as CarIcon, 
-  Phone, User, Filter, ArrowUpDown, CheckCircle2, Circle
+  Phone, User, CheckCircle2, Circle
 } from "lucide-react";
 
 interface Car {
@@ -22,38 +23,32 @@ interface Car {
   status: "active" | "inactive"; 
 }
 
+// Fetcher for SWR
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function AdminDashboard() {
-  const [cars, setCars] = useState<Car[]>([]);
-  const [loading, setLoading] = useState(true);
+  // --- STATE ---
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [activeImage, setActiveImage] = useState(0);
 
-  // --- FETCH DATA ---
-  const fetchCars = async () => {
-    try {
-      const res = await fetch("/api/cars");
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      const sanitized = data.map((c: Car) => ({ ...c, status: c.status || "inactive" }));
-      setCars(sanitized || []);
-    } catch (err) {
-      console.error("Fetch error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // --- LIVE UPDATE HOOK (SWR) ---
+  const { data: cars = [], isLoading } = useSWR<Car[]>("/api/cars", fetcher, {
+    refreshInterval: 5000, // Auto-refresh every 5 seconds
+    revalidateOnFocus: true, // Refresh when user switches back to this tab
+  });
 
-  useEffect(() => {
-    fetchCars();
-  }, []);
-
-  // --- PERSISTENT STATUS TOGGLE ---
+  // --- PERSISTENT STATUS TOGGLE (With Optimistic UI) ---
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
-    setCars(prev => prev.map(c => c._id === id ? { ...c, status: newStatus as any } : c));
+    
+    // Update UI locally first
+    mutate("/api/cars", (currentData: Car[] | undefined) => 
+      currentData?.map(c => c._id === id ? { ...c, status: newStatus as any } : c), 
+      false 
+    );
 
     try {
       const response = await fetch(`/api/cars/${id}`, {
@@ -61,10 +56,11 @@ export default function AdminDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!response.ok) throw new Error("Failed to update status");
+      if (!response.ok) throw new Error();
+      mutate("/api/cars"); // Sync with server
     } catch (err) {
       console.error("DB Update Error:", err);
-      setCars(prev => prev.map(c => c._id === id ? { ...c, status: currentStatus as any } : c));
+      mutate("/api/cars"); // Revert on error
       alert("Failed to save status to database.");
     }
   };
@@ -75,7 +71,7 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(`/api/cars/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setCars(prev => prev.filter(c => c._id !== id));
+        mutate("/api/cars");
         if (selectedCar?._id === id) setSelectedCar(null);
       }
     } catch (err) {
@@ -84,7 +80,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // --- EXPORT ---
+  // --- EXPORT TO EXCEL ---
   const exportToExcel = () => {
     const dataToExport = processedCars.map((car) => ({
       Owner: car.fullName,
@@ -100,9 +96,9 @@ export default function AdminDashboard() {
     XLSX.writeFile(wb, `Fleet_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  // --- FILTER & SORT ---
+  // --- FILTER & SORT LOGIC ---
   const processedCars = useMemo(() => {
-    let result = cars.filter((car) => {
+    let result = (cars || []).filter((car) => {
       const matchesSearch = 
         car.fullName?.toLowerCase().includes(search.toLowerCase()) ||
         car.carModel?.toLowerCase().includes(search.toLowerCase()) ||
@@ -118,7 +114,7 @@ export default function AdminDashboard() {
     });
   }, [cars, search, statusFilter, sortBy]);
 
-  if (loading) return (
+  if (isLoading) return (
     <div className="h-screen w-full flex items-center justify-center bg-[#080808]">
       <div className="w-10 h-10 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
     </div>
@@ -199,7 +195,6 @@ export default function AdminDashboard() {
 
         {/* DATA LIST */}
         <div className="bg-[#0f0f0f] border border-white/5 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl">
-          {/* DESKTOP TABLE */}
           <div className="hidden md:block">
             <table className="w-full text-left text-sm">
               <thead className="bg-white/[0.03] border-b border-white/5 text-[10px] uppercase font-bold text-gray-500 tracking-[0.2em]">
