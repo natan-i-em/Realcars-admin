@@ -24,4 +24,4 @@ const UserCarSchema = new mongoose.Schema({
 })
 
 export default mongoose.models.UserCar ||
-mongoose.model("UserCar", UserCarSchema)
+mongoose.model("UserCar", UserCarSchema) 
